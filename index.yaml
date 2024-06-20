@@ -2,6 +2,22 @@ apiVersion: v1
 entries:
   zitadel:
   - apiVersion: v2
+    appVersion: v2.51.3
+    created: "2024-06-20T12:15:55.870437642Z"
+    description: A Helm chart for ZITADEL
+    digest: a290d5e396093ed9f4493141f6fd26c4bdf89224295629d571153b561862bfa0
+    icon: https://zitadel.com/zitadel-logo-dark.svg
+    kubeVersion: '>= 1.21.0-0'
+    maintainers:
+    - email: support@zitadel.com
+      name: zitadel
+      url: https://zitadel.com
+    name: zitadel
+    type: application
+    urls:
+    - https://github.com/telia-oss/team-alliance-zitadel-charts/releases/download/zitadel-7.15.0/zitadel-7.15.0.tgz
+    version: 7.15.0
+  - apiVersion: v2
     appVersion: v2.46.0
     created: "2024-04-12T21:07:26.591726426Z"
     description: A Helm chart for ZITADEL
@@ -33,4 +49,4 @@ entries:
     urls:
     - https://github.com/telia-oss/team-alliance-zitadel-charts/releases/download/zitadel-7.11.0/zitadel-7.11.0.tgz
     version: 7.11.0
-generated: "2024-04-12T21:07:26.591762183Z"
+generated: "2024-06-20T12:15:55.870456678Z"
