@@ -50,13 +50,13 @@ zitadel:
       # IMPORTANT: The following fields are managed automatically by the Helm chart.
       # Setting these manually is not supported and will cause the deployment to fail.
       # The chart automatically generates and manages these paths internally.
-      MachineKeyPath: null  # @schema type:[null,string]
-      PatPath: null  # @schema type:[null,string]
-      LoginClientPatPath: null  # @schema type:[null,string]
+      MachineKeyPath: null # @schema type:[null,string]
+      PatPath: null # @schema type:[null,string]
+      LoginClientPatPath: null # @schema type:[null,string]
       Org:
         # IMPORTANT: Setting Skip here is not supported. Use FirstInstance.Skip instead.
         # This field exists for validation purposes only.
-        Skip: null  # @schema type:[null,boolean]
+        Skip: null # @schema type:[null,boolean]
         # Defines an administrative machine user created with the IAM_OWNER role.
         # This user is intended for initial automation and administrative tasks
         # right after the Helm chart is deployed.
@@ -70,14 +70,14 @@ zitadel:
         # 'iam-admin-pat').
         Machine:
           Machine:
-            Username: 'iam-admin'
-            Name: 'Automatically Initialized IAM Admin'
+            Username: "iam-admin"
+            Name: "Automatically Initialized IAM Admin"
           MachineKey:
-            ExpirationDate: '2029-01-01T00:00:00Z'
+            ExpirationDate: "2029-01-01T00:00:00Z"
             Type: 1
           # If this Pat object is present, a PAT will also be created.
           Pat:
-            ExpirationDate: '2029-01-01T00:00:00Z'
+            ExpirationDate: "2029-01-01T00:00:00Z"
 
         # Defines the internal machine user required by the ZITADEL Login UI.
         # This user communicates with the main ZITADEL API to handle login flows.
@@ -86,11 +86,11 @@ zitadel:
         # Kubernetes secret named 'login-client'.
         LoginClient:
           Machine:
-            Username: 'login-client'
-            Name: 'Automatically Initialized IAM Login Client'
+            Username: "login-client"
+            Name: "Automatically Initialized IAM Login Client"
           # The expiration date for the Login UI's Personal Access Token (PAT).
           Pat:
-            ExpirationDate: '2029-01-01T00:00:00Z'
+            ExpirationDate: "2029-01-01T00:00:00Z"
 
   # @schema type:[null,object]
   # -- Sensitive ZITADEL configuration values written to a Kubernetes Secret instead
@@ -928,12 +928,8 @@ ingress:
     serversSchemeH2c: true
     # -- (map[string]string) Additional annotations to apply to the Traefik Ingress resource.
     annotations: {}
-    # -- A list of host rules for the Traefik Ingress.
-    # The path is hardcoded to "/" (Prefix). Only the host is configurable.
-    hosts:
-      - host: ""
-    # -- TLS configuration for the Traefik Ingress.
-    tls: []
+    # -- Hosts, paths, and TLS for the Traefik Ingress are shared with the
+    # main ingress configuration (ingress.hosts, ingress.tls).
     # Traefik Middleware configuration.
     middlewares:
       # CORS middleware settings.
