@@ -483,7 +483,9 @@ login:
   # the web-based login interface accessible from outside the cluster. It can be
   # configured independently of the main ZITADEL service Ingress.
   ingress:
-    # -- If true, creates an Ingress resource for the Login UI service.
+    # -- If true, creates the nginx/generic Ingress resource for the Login UI service.
+    # This controls the standard Kubernetes Ingress (ingress_login.yaml).
+    # Can be enabled alongside login.ingress.traefik.enabled for parallel operation.
     enabled: false
     # -- The name of the IngressClass resource to use for this Ingress.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
@@ -519,6 +521,69 @@ login:
     # -- ([]IngressTLS) TLS configuration for the Ingress. Secure the login UI with HTTPS by
     # referencing a secret containing the TLS certificate and key.
     tls: []
+    # Traefik ingress configuration for the Login UI service.
+    # When enabled, creates a Traefik-specific Ingress resource along with
+    # Traefik Middleware CRDs (CORS, rate limiting, in-flight requests, HTTPS redirect).
+    # Can be enabled alongside the nginx/generic ingress (login.ingress.enabled) for parallel operation.
+    traefik:
+      # -- If true, creates Traefik Ingress and Middleware resources for the Login UI service.
+      enabled: false
+      # -- The IngressClass name for the Traefik Ingress.
+      className: traefik
+      # -- Traefik router entrypoints (comma-separated).
+      entrypoints: websecure,web
+      # -- If true, adds the traefik.ingress.kubernetes.io/service.serversscheme: h2c annotation.
+      serversSchemeH2c: true
+      # -- (map[string]string) Additional annotations to apply to the Traefik Ingress resource.
+      annotations: {}
+      # -- A list of host rules for the Traefik Ingress.
+      # The path is hardcoded to "/ui/v2/login" (Prefix). Only the host is configurable.
+      hosts:
+        - host: ""
+      # -- TLS configuration for the Traefik Ingress.
+      tls: []
+      # Traefik Middleware configuration.
+      middlewares:
+        # CORS middleware settings.
+        cors:
+          # -- If true, creates the CORS middleware resource.
+          enabled: true
+          accessControlAllowCredentials: true
+          # -- List of regex patterns for allowed origins. Must be set per environment.
+          accessControlAllowOriginListRegex: []
+          accessControlAllowMethods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          accessControlMaxAge: 1728000
+          accessControlAllowHeaders:
+            - "*"
+          addVaryHeader: true
+        # Rate limiting middleware settings.
+        rateLimit:
+          # -- If true, creates the rate limiting middleware resource.
+          enabled: true
+          average: 100
+          burst: 200
+          period: 1s
+          sourceCriterion:
+            ipStrategy: {}
+        # In-flight request limiting middleware settings.
+        inFlightReq:
+          # -- If true, creates the in-flight request limiting middleware resource.
+          enabled: true
+          amount: 64
+          sourceCriterion:
+            ipStrategy: {}
+        # HTTPS redirect middleware settings.
+        redirectHttps:
+          # -- If true, creates the HTTPS redirect middleware resource.
+          enabled: true
+          scheme: https
+          permanent: true
   # ServiceAccount configuration for Login UI pods.
   serviceAccount:
     # -- Whether to create a dedicated service account for the Login UI. Set to
@@ -809,7 +874,9 @@ service:
 # configured to work with various ingress controllers like NGINX, Traefik, or
 # AWS ALB.
 ingress:
-  # -- If true, creates an Ingress resource for the ZITADEL service.
+  # -- If true, creates the nginx/generic Ingress resource for the ZITADEL service.
+  # This controls the standard Kubernetes Ingress (ingress_zitadel.yaml).
+  # Can be enabled alongside ingress.traefik.enabled for parallel operation.
   enabled: false
   # -- A chart-specific setting to enable logic for different controllers.
   # Use "aws" to generate AWS ALB-specific annotations and resources.
@@ -846,6 +913,69 @@ ingress:
   # -- ([]IngressTLS) TLS configuration for the Ingress. This allows you to secure the endpoint
   # with HTTPS by referencing a secret that contains the TLS certificate and key.
   tls: []
+  # Traefik ingress configuration for the main ZITADEL service.
+  # When enabled, creates a Traefik-specific Ingress resource along with
+  # Traefik Middleware CRDs (CORS, rate limiting, in-flight requests, HTTPS redirect).
+  # Can be enabled alongside the nginx/generic ingress (ingress.enabled) for parallel operation.
+  traefik:
+    # -- If true, creates Traefik Ingress and Middleware resources for the ZITADEL service.
+    enabled: false
+    # -- The IngressClass name for the Traefik Ingress.
+    className: traefik
+    # -- Traefik router entrypoints (comma-separated).
+    entrypoints: websecure,web
+    # -- If true, adds the traefik.ingress.kubernetes.io/service.serversscheme: h2c annotation.
+    serversSchemeH2c: true
+    # -- (map[string]string) Additional annotations to apply to the Traefik Ingress resource.
+    annotations: {}
+    # -- A list of host rules for the Traefik Ingress.
+    # The path is hardcoded to "/" (Prefix). Only the host is configurable.
+    hosts:
+      - host: ""
+    # -- TLS configuration for the Traefik Ingress.
+    tls: []
+    # Traefik Middleware configuration.
+    middlewares:
+      # CORS middleware settings.
+      cors:
+        # -- If true, creates the CORS middleware resource.
+        enabled: true
+        accessControlAllowCredentials: true
+        # -- List of regex patterns for allowed origins. Must be set per environment.
+        accessControlAllowOriginListRegex: []
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        accessControlMaxAge: 1728000
+        accessControlAllowHeaders:
+          - "*"
+        addVaryHeader: true
+      # Rate limiting middleware settings.
+      rateLimit:
+        # -- If true, creates the rate limiting middleware resource.
+        enabled: true
+        average: 100
+        burst: 200
+        period: 1s
+        sourceCriterion:
+          ipStrategy: {}
+      # In-flight request limiting middleware settings.
+      inFlightReq:
+        # -- If true, creates the in-flight request limiting middleware resource.
+        enabled: true
+        amount: 64
+        sourceCriterion:
+          ipStrategy: {}
+      # HTTPS redirect middleware settings.
+      redirectHttps:
+        # -- If true, creates the HTTPS redirect middleware resource.
+        enabled: true
+        scheme: https
+        permanent: true
 
 # @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.api.core.v1.ResourceRequirements
 # -- (ResourceRequirements) CPU and memory resource requests and limits for the ZITADEL container.
