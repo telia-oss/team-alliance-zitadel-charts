@@ -928,12 +928,8 @@ ingress:
     serversSchemeH2c: true
     # -- (map[string]string) Additional annotations to apply to the Traefik Ingress resource.
     annotations: {}
-    # -- A list of host rules for the Traefik Ingress.
-    # The path is hardcoded to "/" (Prefix). Only the host is configurable.
-    hosts:
-      - host: ""
-    # -- TLS configuration for the Traefik Ingress.
-    tls: []
+    # -- Hosts, paths, and TLS for the Traefik Ingress are shared with the
+    # main ingress configuration (ingress.hosts, ingress.tls).
     # Traefik Middleware configuration.
     middlewares:
       # CORS middleware settings.
