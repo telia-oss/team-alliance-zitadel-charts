@@ -17,30 +17,35 @@
 {{- if .Values.login.ingress.traefik.middlewares.rateLimit.enabled -}}
 {{- $mwList = append $mwList (printf "%s-ratelimit@kubernetescrd" $mwPrefix) -}}
 {{- end -}}
+{{- $values := .Values -}}
+{{- range $idx, $h := .Values.login.ingress.traefik.hosts }}
+{{- $resolvedHost := $h.host | default $values.zitadel.configmapConfig.ExternalDomain }}
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}-traefik
-  namespace: {{ .Release.Namespace }}
+  name: {{ $fullName }}-{{ $resolvedHost | replace "*" "wildcard" | replace "." "-" }}
+  namespace: {{ $.Release.Namespace }}
   labels:
-    {{- include "login.labels" . | nindent 4 }}
+    {{- include "login.labels" $ | nindent 4 }}
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: {{ .Values.login.ingress.traefik.entrypoints }}
-    {{- if .Values.login.ingress.traefik.serversSchemeH2c }}
+    traefik.ingress.kubernetes.io/router.entrypoints: {{ $.Values.login.ingress.traefik.entrypoints }}
+    {{- if $.Values.login.ingress.traefik.serversSchemeH2c }}
     traefik.ingress.kubernetes.io/service.serversscheme: h2c
     {{- end }}
     {{- if $mwList }}
     traefik.ingress.kubernetes.io/router.middlewares: {{ join ",\n      " $mwList }}
     {{- end }}
-    {{- with .Values.login.ingress.traefik.annotations }}
+    {{- $hostAnnotations := $h.annotations | default dict }}
+    {{- $globalAnnotations := $.Values.login.ingress.traefik.annotations | default dict }}
+    {{- $mergedAnnotations := merge $hostAnnotations $globalAnnotations }}
+    {{- with $mergedAnnotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  ingressClassName: {{ .Values.login.ingress.traefik.className }}
+  ingressClassName: {{ $.Values.login.ingress.traefik.className }}
   rules:
-    {{- $values := .Values -}}
-    {{- range .Values.login.ingress.traefik.hosts }}
-    - host: {{ .host | default $values.zitadel.configmapConfig.ExternalDomain | quote }}
+    - host: {{ $resolvedHost | quote }}
       http:
         paths:
           - path: /ui/v2/login
@@ -50,11 +55,28 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: {{ $svcPort }}
-    {{- end }}
-  {{- with .Values.login.ingress.traefik.tls }}
+  {{- if $h.secret }}
   tls:
-    {{- toYaml . | nindent 4 }}
+    - hosts:
+        - {{ $resolvedHost | quote }}
+      secretName: {{ $h.secret }}
+  {{- else }}
+  {{- $matched := list -}}
+  {{- range $t := $.Values.login.ingress.traefik.tls }}
+    {{- if has $resolvedHost ($t.hosts | default list) }}
+      {{- $matched = append $matched $t -}}
+    {{- end }}
   {{- end }}
+  {{- if $matched }}
+  tls:
+    {{- range $t := $matched }}
+    - hosts:
+        - {{ $resolvedHost | quote }}
+      secretName: {{ $t.secretName }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}
 {{- if .Values.login.ingress.traefik.middlewares.cors.enabled }}
 ---
 apiVersion: traefik.io/v1alpha1
